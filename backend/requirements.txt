@@ -1,0 +1,7 @@
+# For the web server
+fastapi
+uvicorn[standard]
+
+# For the AI
+google-generativeai
+python-dotenv
