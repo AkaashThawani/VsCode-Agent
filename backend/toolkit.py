@@ -1,80 +1,100 @@
+# backend/toolkit.py
+
 import os
+import inspect
 from pathlib import Path
 
+class Toolkit:
+    def __init__(self, project_path: str):
+        """
+        Initializes the Toolkit with a specific project sandbox path.
+        All tool operations will be relative to this path.
+        """
+        self.sandbox_path = os.path.abspath(project_path)
+        print(f"Toolkit initialized with sandbox: {self.sandbox_path}")
 
-def list_files(path: str) -> str:
-    """
-    Lists all files and directories in a given path relative to the project root.
-    Returns a string with the directory tree.
-    """
-    try:
-        # Security: Ensure the path is not attempting to access parent directories
-        if ".." in path.split(os.path.sep):
-            return "Error: Access to parent directories is not allowed."
+    def _get_safe_path(self, relative_path: str) -> str:
+        """
+        Constructs a safe, absolute path within the sandbox.
+        Prevents directory traversal attacks.
+        """
+        # Join the sandbox path with the relative path from the agent
+        safe_path = os.path.join(self.sandbox_path, relative_path)
+        # Get the absolute path to resolve any '..' etc.
+        safe_path = os.path.abspath(safe_path)
 
-        base_path = Path(path)
-        if not base_path.is_dir():
-            return f"Error: '{path}' is not a valid directory."
+        # CRITICAL SECURITY CHECK:
+        # Ensure the resolved path is still inside the sandbox directory
+        if not safe_path.startswith(self.sandbox_path):
+            raise PermissionError("Error: Attempted to access a file outside the sandboxed project directory.")
+        
+        return safe_path
 
-        tree_str = f"Directory listing for: {path}\n"
-        # We use a generator expression for efficiency and then join
-        paths = sorted(base_path.rglob('*'))
+    def list_files(self, path: str) -> str:
+        """
+        Lists all files and directories in a given path.
+        The path should be relative to the project's root directory (e.g., '.' or 'src/').
+        """
+        try:
+            safe_path = self._get_safe_path(path)
+            
+            if not os.path.isdir(safe_path):
+                return f"Error: '{path}' is not a valid directory."
 
-        for p in paths:
-            # Calculate depth relative to the base path
-            depth = len(p.relative_to(base_path).parts)
-            # Use '    ' for indentation to clearly show hierarchy
-            indent = '    ' * depth
-            # Use a more standard tree representation
-            tree_str += f'{indent}├── {p.name}\n'
+            paths = sorted(Path(safe_path).rglob('*'))
+            if not paths:
+                return "The directory is empty."
 
-        if not paths:
-            return f"Directory '{path}' is empty."
+            tree_str = "Directory listing:\n"
+            for p in paths:
+                relative_p = p.relative_to(safe_path)
+                tree_str += f" - {relative_p}\n"
+            return tree_str
+        except Exception as e:
+            return f"Error listing files: {e}"
 
-        return tree_str
-    except Exception as e:
-        return f"Error listing files: {e}"
+    def read_file(self, file_path: str) -> str:
+        """
+        Reads the content of a specified file.
+        The file_path should be relative to the project's root directory.
+        """
+        try:
+            safe_path = self._get_safe_path(file_path)
+            with open(safe_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except FileNotFoundError:
+            return f"Error: File not found at '{file_path}'."
+        except Exception as e:
+            return f"Error reading file: {e}"
 
+    def write_file(self, file_path: str, content: str) -> str:
+        """
+        Writes content to a specified file, overwriting it if it exists.
+        The file_path should be relative to the project's root directory.
+        """
+        try:
+            safe_path = self._get_safe_path(file_path)
+            
+            parent_dir = os.path.dirname(safe_path)
+            os.makedirs(parent_dir, exist_ok=True)
+            
+            with open(safe_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            return f"Successfully wrote to {file_path}."
+        except Exception as e:
+            return f"Error writing to file: {e}"
 
-def read_file(file_path: str) -> str:
-    """
-    Reads the contents of a file and returns it as a string.
-    """
-    try:
-        if ".." in file_path.split(os.path.sep):
-            return "Access to parent directories is not allowed."
+    def finish(self, reason: str) -> str:
+        """
+        Call this function when you have successfully completed the goal.
+        """
+        return f"Agent has finished the task. Reason: {reason}"
 
-        path = Path(file_path)
-        if not path.is_file():
-            return "Invalid file path."
-
-        with path.open('r', encoding='utf-8') as file:
-            content = file.read()
-        return content
-
-    except Exception as e:
-        return f"Error occurred: {e}"
-
-
-def write_file(file_name: str, content: str) -> str:
-    """
-    Writes the given content to a file.
-    """
-    try:
-        if ".." in file_name.split(os.path.sep):
-            return "Access to parent directories is not allowed."
-        os.makedirs(os.path.dirname(file_name), exist_ok=True)
-        path = Path(file_name)
-        with path.open('w', encoding='utf-8') as file:
-            file.write(content)
-        return "File written successfully."
-
-    except Exception as e:
-        return f"Error occurred: {e}"
-
-
-AVAILABLE_TOOLS = {
-    "list_files": list_files,
-    "read_file": read_file,
-    "write_file": write_file
-}
+    def get_tools(self) -> dict:
+        """Returns a dictionary of available tools."""
+        return {
+            "list_files": self.list_files,
+            "read_file": self.read_file,
+            "write_file": self.write_file,
+            "finish": self.finish,
+        }
