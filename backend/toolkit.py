@@ -4,6 +4,7 @@ import os
 import inspect
 from pathlib import Path
 
+
 class Toolkit:
     def __init__(self, project_path: str):
         """
@@ -26,8 +27,9 @@ class Toolkit:
         # CRITICAL SECURITY CHECK:
         # Ensure the resolved path is still inside the sandbox directory
         if not safe_path.startswith(self.sandbox_path):
-            raise PermissionError("Error: Attempted to access a file outside the sandboxed project directory.")
-        
+            raise PermissionError(
+                "Error: Attempted to access a file outside the sandboxed project directory.")
+
         return safe_path
 
     def list_files(self, path: str) -> str:
@@ -37,7 +39,7 @@ class Toolkit:
         """
         try:
             safe_path = self._get_safe_path(path)
-            
+
             if not os.path.isdir(safe_path):
                 return f"Error: '{path}' is not a valid directory."
 
@@ -61,7 +63,8 @@ class Toolkit:
         try:
             safe_path = self._get_safe_path(file_path)
             with open(safe_path, 'r', encoding='utf-8') as f:
-                return f.read()
+                content = f.read()
+                return f"Successfully read {file_path}. Now analyzing its content."
         except FileNotFoundError:
             return f"Error: File not found at '{file_path}'."
         except Exception as e:
@@ -73,17 +76,78 @@ class Toolkit:
         The file_path should be relative to the project's root directory.
         """
         try:
+            if content.endswith("\n\nBegin."):
+                content = content[:-8]
+            elif content.endswith("\nBegin."):
+                content = content[:-7]
             safe_path = self._get_safe_path(file_path)
-            
+
             parent_dir = os.path.dirname(safe_path)
             os.makedirs(parent_dir, exist_ok=True)
-            
+
             with open(safe_path, 'w', encoding='utf-8') as f:
                 f.write(content)
             return f"Successfully wrote to {file_path}."
         except Exception as e:
             return f"Error writing to file: {e}"
 
+    def search_and_replace(self, file_path: str, search_string: str, replace_string: str) -> str:
+        """
+        Performs a surgical search and replace on a file. This is the preferred tool for editing existing files.
+        """
+        try:
+            safe_path = self._get_safe_path(file_path)
+            with open(safe_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            new_content = content.replace(search_string, replace_string)
+
+            if new_content == content:
+                return f"Warning: Search string was not found in {file_path}. No changes were made."
+
+            with open(safe_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+
+            return f"Successfully performed search and replace in {file_path}."
+        except FileNotFoundError:
+            return f"Error: File not found at '{file_path}'."
+        except Exception as e:
+            return f"Error during search and replace: {e}"
+
+    def replace_code_block(self, file_path: str, original_code_block: str, new_code_block: str) -> str:
+        """
+        Surgically replaces a multi-line block of code in a file with a new one.
+        This is the primary tool for all code editing.
+        """
+        try:
+            safe_path = self._get_safe_path(file_path)
+            with open(safe_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            new_content = content.replace(original_code_block, new_code_block)
+
+            if new_content == content:
+                return "Error: The 'original_code_block' was not found in the file. No changes were made. Please use read_file to get the exact block of code."
+
+            with open(safe_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+
+            return f"Successfully replaced code block in {file_path}."
+        except FileNotFoundError:
+            return f"Error: File not found at '{file_path}'."
+        except Exception as e:
+            return f"Error during code replacement: {e}"
+
+    def ask_user_for_clarification(self, question: str) -> str:
+        """
+        Use this tool when the user's request is ambiguous, conversational,
+        or not a clear coding task. Asks the user a clarifying question.
+        """
+        # This tool doesn't do anything on the backend, it just returns the question
+        # to be displayed in the chat, giving the agent a valid conversational action.
+        return question
+    
+    
     def finish(self, reason: str) -> str:
         """
         Call this function when you have successfully completed the goal.
@@ -97,4 +161,7 @@ class Toolkit:
             "read_file": self.read_file,
             "write_file": self.write_file,
             "finish": self.finish,
+            "search_and_replace": self.search_and_replace,
+            "replace_code_block":self.replace_code_block,
+            "ask_user_for_clarification":self.ask_user_for_clarification
         }

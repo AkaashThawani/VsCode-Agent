@@ -1,8 +1,9 @@
 {
   "name": "agentdev",
   "displayName": "AgentDev",
-  "description": " An autonomous AI developer agent.",
+  "description": "An autonomous AI developer agent.",
   "version": "0.0.1",
+  "publisher": "akaashthawani",
   "engines": {
     "vscode": "^1.103.0"
   },
@@ -10,14 +11,35 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:agentdev.startTask"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agentdev-sidebar-container",
+          "title": "AgentDev",
+          "icon": "media/robot.svg"
+        }
+      ]
+    },
+    "views": {
+      "agentdev-sidebar-container": [
+        {
+          "id": "agentdev.statusView",
+          "name": "AI Coding Assistant",
+          "type": "webview"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "agentdev.startTask",
-        "title": "AgentDev: Start New Task"
+        "command": "agentdev.startTask.internal",
+        "title": "AgentDev: Start Task (Internal)"
+      },
+      {
+        "command": "agentdev.stopAgent.internal",
+        "title": "AgentDev: Stop Agent (Internal)"
       }
     ]
   },

@@ -1,0 +1,125 @@
+/* frontend/media/styles.css */
+body, html {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: var(--vscode-font-family);
+    color: var(--vscode-editor-foreground);
+    background-color: var(--vscode-sideBar-background);
+    display: flex;
+    flex-direction: column;
+}
+
+#chat-history {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.message {
+    padding: 4px 0;
+    margin-bottom: 8px;
+    max-width: 100%;
+    word-wrap: break-word;
+    display: flex;
+    flex-direction: column;
+}
+
+.message.user p::before {
+    content: "You: ";
+    font-weight: bold;
+}
+
+.message.agent p::before {
+    content: "Agent: ";
+    font-weight: bold;
+}
+
+.message.thought {
+    font-style: italic;
+    font-size: 0.9em;
+    opacity: 0.7;
+    border-left: 3px solid var(--vscode-focusBorder);
+    padding-left: 10px;
+    margin-left: 5px;
+}
+
+.message p {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+#input-area {
+    padding: 10px;
+    border-top: 1px solid var(--vscode-sideBar-border);
+}
+
+/* --- NEW STYLES FOR THE INPUT WRAPPER --- */
+#input-wrapper {
+    position: relative; /* This is key for positioning the child icon */
+    display: flex;
+    width: 100%;
+}
+
+#goal-input {
+    flex-grow: 1;
+    width: 100%;
+    padding: 8px 36px 8px 10px; /* Add padding on the right for the icon */
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border);
+    border-radius: 5px;
+    resize: none;
+    font-family: var(--vscode-font-family);
+    line-height: 1.4;
+    max-height: 100px; /* Allow for some vertical expansion */
+}
+
+.send-icon {
+    position: absolute; /* Position the icon relative to the wrapper */
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%); /* Center it vertically */
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.send-icon:hover {
+    opacity: 1;
+}
+
+#stop-button-container {
+    padding: 10px;
+    border-top: 1px solid var(--vscode-sideBar-border);
+}
+
+#stop-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border: 1px solid var(--vscode-button-border);
+    padding: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#stop-button:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+#stop-button .icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+}
+
+/* This class will be toggled to show/hide elements */
+.hidden {
+    display: none !important;
+}

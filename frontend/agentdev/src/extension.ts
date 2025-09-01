@@ -1,66 +1,93 @@
+// frontend/src/extension.ts
 import * as vscode from 'vscode';
-import fetch from 'node-fetch'; // Import the fetch library
+import fetch from 'node-fetch';
+import { AgentStatusViewProvider } from './AgentViewStatus';
+
+// Global flag to control the agent's execution loop and state
+let isAgentRunning = false;
 
 export function activate(context: vscode.ExtensionContext) {
 
-    console.log('Congratulations, your extension "agentdev" is now active!');
+    const provider = new AgentStatusViewProvider(context.extensionUri);
 
-    let disposable = vscode.commands.registerCommand('agentdev.startTask', async () => {
-        console.log("recived a task ")
-        // 1. Get the active workspace folder (the user's project)
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(AgentStatusViewProvider.viewType, provider)
+    );
+    
+
+    // Command to run the agent with a given goal
+    const internalStartTask = vscode.commands.registerCommand('agentdev.startTask.internal', async (goal: string) => {
+
         const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length === 0) {
-            vscode.window.showErrorMessage('AgentDev: You must have a folder open to run a task.');
-            return; // Stop if no folder is open
+        if (!workspaceFolders || !workspaceFolders.length) {
+            provider.addMessage({ role: 'agent', content: 'Error: You must have a folder open.' });
+            return;
         }
+
+        if (isAgentRunning) {
+            vscode.window.showWarningMessage("An agent is already running.");
+            return;
+        }
+
+        isAgentRunning = true;
+        provider.setAgentState(true);
+
         const projectPath = workspaceFolders[0].uri.fsPath;
-
-        // 2. Prompt the user for their goal
-        const goal = await vscode.window.showInputBox({
-            prompt: "What task should the AI agent perform?",
-            placeHolder: "e.g., refactor the User service to use a repository pattern",
-            title: "AgentDev: New Task"
-        });
-        console.log("GOAL",goal)
-        if (!goal) {
-            vscode.window.showWarningMessage('AgentDev task canceled.');
-            return; // Stop if the user cancels
-        }
-
-        // 3. Send the data to the Python ba    ckend
-        vscode.window.showInformationMessage(`Agent task started for: ${goal}`);
 
         try {
             const response = await fetch('http://127.0.0.1:8000/execute-task', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    goal: goal,
-                    project_path: projectPath
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ goal, project_path: projectPath }),
             });
 
-            if (!response.ok) {
-                // Get more detailed error from the server if possible
-                const errorBody = await response.json();
-                throw new Error(`Server responded with ${response.status}: ${errorBody.detail || response.statusText}`);
+            if (!response.body) {
+                throw new Error("Response body is null");
             }
 
-            const result = await response.json();
-            console.log('Backend response:', result);
+            for await (const chunk of response.body) {
+                if (!isAgentRunning) {
+                    // THE FIX IS HERE: We have removed the response.body.destroy() line.
+                    // The 'break' statement is enough to exit the loop.
+                    provider.addMessage({ role: 'thought', content: 'Agent stopped by user.' });
+                    break;
+                }
 
-            // 4. Show a success message
-            vscode.window.showInformationMessage('Agent task completed successfully!');
+                const lines = chunk.toString().split('\n\n');
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const jsonStr = line.substring(6);
+                            const eventData = JSON.parse(jsonStr);
+                            const { type, content } = eventData;
+
+                            if (type === 'thought' || type === 'status') {
+                                provider.addMessage({ role: 'thought', content });
+                            } else {
+                                provider.addMessage({ role: 'agent', content });
+                            }
+                        } catch (e) { }
+                    }
+                }
+            }
 
         } catch (error: any) {
-            console.error('Error communicating with backend:', error);
-            vscode.window.showErrorMessage(`AgentDev Error: ${error.message}`);
+            if (isAgentRunning) {
+                provider.addMessage({ role: 'agent', content: `Error: ${error.message}` });
+            }
+        } finally {
+            isAgentRunning = false;
+            provider.setAgentState(false);
+        }
+    });
+    // Command to stop the agent
+    const stopAgentCommand = vscode.commands.registerCommand('agentdev.stopAgent.internal', () => {
+        if (isAgentRunning) {
+            isAgentRunning = false; // The loop in the start command will see this and exit
         }
     });
 
-    context.subscriptions.push(disposable);
+    context.subscriptions.push(internalStartTask, stopAgentCommand);
 }
 
-export function deactivate() {}
+export function deactivate() { }
