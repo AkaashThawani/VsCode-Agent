@@ -1,0 +1,61 @@
+{
+  "name": "agentdev",
+  "displayName": "AgentDev",
+  "description": "AI coding agent helper",
+  "enabledApiProposals": [],
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.103.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agentdev-container",
+          "title": "AgentDev",
+          "icon": "media/robot.svg"
+        }
+      ]
+    },
+    "views": {
+      "agentdev-container": [
+        {
+          "id": "agentdev.chatView",
+          "name": "Agent",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "agentdev.startTask.internal",
+        "title": "Start Agent Task"
+      },
+      {
+        "command": "agentdev.stopAgent.internal",
+        "title": "Stop Agent Task"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.3.0",
+    "@types/vscode": "^1.103.0",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}

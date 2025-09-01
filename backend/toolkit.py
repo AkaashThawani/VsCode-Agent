@@ -3,7 +3,7 @@
 import os
 import inspect
 from pathlib import Path
-
+import ast
 
 class Toolkit:
     def __init__(self, project_path: str):
@@ -146,8 +146,52 @@ class Toolkit:
         # This tool doesn't do anything on the backend, it just returns the question
         # to be displayed in the chat, giving the agent a valid conversational action.
         return question
-    
-    
+
+    def get_tool_definitions(tools: dict):  # type: ignore
+        """
+        Generates a formatted string of tool definitions from a dictionary of functions.
+        """
+        definitions = ""
+        for name, func in tools.items():
+            sig = inspect.signature(func)
+            # Format the signature, e.g., "read_file(file_path: str) -> str"
+            sig_str = f"{name}{sig}"
+            # Get the first line of the docstring
+            doc = func.__doc__.strip().split('\n')[0]
+            definitions += f"- Function: `{sig_str}`\n"
+            definitions += f"  - Description: {doc}\n"
+        return definitions
+
+    def analyze_code_structure(self, file_path: str) -> str:
+        """
+        Analyzes a Python file to extract its structure (classes, functions, and global variables).
+        This is the primary tool for understanding code before reading the full file.
+        """
+        try:
+            safe_path = self._get_safe_path(file_path)
+            with open(safe_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            tree = ast.parse(content)
+            summary = f"Analysis of {file_path}:\n"
+
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef):
+                    summary += f"- Contains Class: `{node.name}`\n"
+                elif isinstance(node, ast.FunctionDef):
+                    summary += f"- Contains Function: `{node.name}`\n"
+                elif isinstance(node, ast.Assign):
+                    # This is a simplification for global variables
+                    if isinstance(node.targets[0], ast.Name):
+                        summary += f"- Contains Global Variable: `{node.targets[0].id}`\n"
+
+            if summary == f"Analysis of {file_path}:\n":
+                return f"No classes, functions, or global variables found in {file_path}."
+
+            return summary
+        except Exception as e:
+            return f"Error analyzing file {file_path}: {e}"
+
     def finish(self, reason: str) -> str:
         """
         Call this function when you have successfully completed the goal.
@@ -162,6 +206,7 @@ class Toolkit:
             "write_file": self.write_file,
             "finish": self.finish,
             "search_and_replace": self.search_and_replace,
-            "replace_code_block":self.replace_code_block,
-            "ask_user_for_clarification":self.ask_user_for_clarification
+            "replace_code_block": self.replace_code_block,
+            "ask_user_for_clarification": self.ask_user_for_clarification,
+            "analyze_code_structure": self.analyze_code_structure
         }
