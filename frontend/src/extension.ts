@@ -1,7 +1,7 @@
 // frontend/src/extension.ts
 import * as vscode from 'vscode';
 import fetch from 'node-fetch';
-import { AgentStatusViewProvider } from './AgentViewStatus';
+import { AgentStatusViewProvider } from './AgentViewStatus'; 
 
 // Global flag to control the agent's execution loop and state
 let isAgentRunning = false;
@@ -13,14 +13,13 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(AgentStatusViewProvider.viewType, provider)
     );
-    
 
     // Command to run the agent with a given goal
     const internalStartTask = vscode.commands.registerCommand('agentdev.startTask.internal', async (goal: string) => {
-
+        
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders || !workspaceFolders.length) {
-            provider.addMessage({ role: 'agent', content: 'Error: You must have a folder open.' });
+            provider.addMessage({ role: 'agent', content: 'Error: You must have a folder open to run a task.' });
             return;
         }
 
@@ -44,13 +43,11 @@ export function activate(context: vscode.ExtensionContext) {
             if (!response.body) {
                 throw new Error("Response body is null");
             }
-
+            
             for await (const chunk of response.body) {
                 if (!isAgentRunning) {
-                    // THE FIX IS HERE: We have removed the response.body.destroy() line.
-                    // The 'break' statement is enough to exit the loop.
                     provider.addMessage({ role: 'thought', content: 'Agent stopped by user.' });
-                    break;
+                    break; 
                 }
 
                 const lines = chunk.toString().split('\n\n');
@@ -66,13 +63,13 @@ export function activate(context: vscode.ExtensionContext) {
                             } else {
                                 provider.addMessage({ role: 'agent', content });
                             }
-                        } catch (e) { }
+                        } catch (e) {}
                     }
                 }
             }
 
         } catch (error: any) {
-            if (isAgentRunning) {
+            if (isAgentRunning) { 
                 provider.addMessage({ role: 'agent', content: `Error: ${error.message}` });
             }
         } finally {
@@ -80,14 +77,15 @@ export function activate(context: vscode.ExtensionContext) {
             provider.setAgentState(false);
         }
     });
+
     // Command to stop the agent
     const stopAgentCommand = vscode.commands.registerCommand('agentdev.stopAgent.internal', () => {
         if (isAgentRunning) {
-            isAgentRunning = false; // The loop in the start command will see this and exit
+            isAgentRunning = false;
         }
     });
 
     context.subscriptions.push(internalStartTask, stopAgentCommand);
 }
 
-export function deactivate() { }
+export function deactivate() {}

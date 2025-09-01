@@ -11,20 +11,12 @@
     "Other"
   ],
   "activationEvents": [
+    "onView:agentdev.statusView"
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "agentdev-sidebar-container",
-          "title": "AgentDev",
-          "icon": "media/robot.svg"
-        }
-      ]
-    },
     "views": {
-      "agentdev-sidebar-container": [
+      "explorer": [
         {
           "id": "agentdev.statusView",
           "name": "AI Coding Assistant",
