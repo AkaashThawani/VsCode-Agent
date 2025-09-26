@@ -9,7 +9,7 @@ def _get_safe_path(sandbox_path: str, relative_path: str) -> str:
     base_path = Path(sandbox_path)
     file_path = base_path.joinpath(relative_path).resolve()
     if base_path not in file_path.parents and file_path != base_path:
-        raise PermissionError("Security Error: Attempted to access a file outside the sandboxed project directory.")
+        raise PermissionError("Security Error: Attempted to access a file outside the sandboxed project directory. ")
     return str(file_path)
 
 # --- Input Schemas for Tools ---
