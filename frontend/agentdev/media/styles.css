@@ -44,3 +44,33 @@ body, html { height: 100vh; margin: 0; padding: 0; font-family: var(--vscode-fon
     font-weight: bold;
     font-style: italic;
 }
+
+#approval-area {
+    padding: 10px;
+    display: flex;
+    gap: 10px; /* Adds space between buttons */
+    border-top: 1px solid var(--vscode-sideBar-border);
+}
+
+.user-button {
+    flex-grow: 1; /* Makes buttons share space equally */
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
+
+.user-button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+.user-button.reject {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+.user-button.reject:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}

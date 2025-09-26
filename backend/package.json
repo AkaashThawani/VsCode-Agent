@@ -1,0 +1,10 @@
+{
+    "name": "agent-backend-helpers",
+    "version": "1.0.0",
+    "description": "Helper scripts for the Python agent.",
+    "type": "module",
+    "dependencies": {
+        "@babel/parser": "^7.24.7",
+        "esprima": "^4.0.1"
+    }
+}

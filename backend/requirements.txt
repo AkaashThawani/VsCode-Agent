@@ -1,7 +1,8 @@
-# For the web server
 fastapi
-uvicorn[standard]
-
-# For the AI
-google-generativeai
+uvicorn
 python-dotenv
+requests
+beautifulsoup4
+cssutils
+langchain
+langchain-community

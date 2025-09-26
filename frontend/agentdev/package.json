@@ -33,6 +33,16 @@
         }
       ]
     },
+    "configuration": {
+      "title": "AgentDev",
+      "properties": {
+        "agentdev.ollamaModelName": {
+          "type": "string",
+          "default": "phi-3:mini",
+          "description": "The name of the Ollama model to use (e.g., 'phi-3:mini', 'llama3:8b'). The model must be pulled via the Ollama CLI first."
+        }
+      }
+    },
     "commands": [
       {
         "command": "agentdev.startTask.internal",
@@ -50,12 +60,14 @@
     "watch": "tsc -watch -p ./"
   },
   "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.3.0",
     "@types/vscode": "^1.103.0",
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "markdown-it": "^14.1.0",
     "node-fetch": "^3.3.2"
   }
 }
