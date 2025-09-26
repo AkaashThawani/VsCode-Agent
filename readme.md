@@ -1,5 +1,11 @@
 # AgentDev-VSCode: An Autonomous AI Developer Agent for VS Code
 
+# Description
+
+An experimental VS Code extension that integrates an autonomous AI agent into your development workflow, allowing you to delegate coding tasks to an AI-powered pair programmer that analyzes codebases and executes changes.
+
+## Overview
+
 AgentDev is an experimental, proof-of-concept Visual Studio Code extension that integrates a powerful, autonomous AI agent directly into your development workflow. The agent is designed to understand high-level software development tasks, reason about an existing codebase, and execute the necessary steps to implement features, fix bugs, or perform refactoring.
 
 The agent operates on any cloned project within VS Code, acting as an AI-powered pair programmer that you can delegate tasks to.
@@ -21,9 +27,48 @@ This project is built on a client-server architecture to leverage the best of tw
 
 ---
 
-## High-Level Architecture
+## Quick Start
 
-![Architecture Diagram](https://i.imgur.com/your-architecture-diagram.png)  <!-- We will create this diagram later -->
+### Prerequisites
+
+- Node.js and npm (for the VS Code extension)
+- Python 3.8+ (for the backend)
+- Ollama running with a supported model (e.g., llama3.2)
+
+### Installation
+
+1. Clone this repository:
+   ```
+   git clone https://github.com/AkaashThawani/VsCode-Agent.git
+   cd VsCode-Agent
+   ```
+
+2. Install backend dependencies:
+   ```
+   cd backend
+   pip install -r requirements.txt
+   ```
+
+3. Install frontend dependencies:
+   ```
+   cd ../frontend/agentdev
+   npm install
+   ```
+
+4. Build the VS Code extension:
+   ```
+   npm run compile
+   ```
+
+5. Run the backend:
+   ```
+   cd ../../backend
+   python main.py
+   ```
+
+6. Open the extension in VS Code (press F5 for development).
+
+## High-Level Architecture
 
 1.  **VS Code Extension (Client):**
     *   Provides the User Interface (UI) via a custom Webview panel.
@@ -34,7 +79,7 @@ This project is built on a client-server architecture to leverage the best of tw
 2.  **Python Agent Server (Backend):**
     *   A FastAPI server that exposes endpoints for the agent's capabilities.
     *   Contains the core "Think -> Act -> Observe" reasoning loop.
-    *   Manages the interaction with a Large Language Model (e.g., Google Gemini).
+    *   Manages the interaction with a Large Language Model via Ollama.
     *   Provides a "Toolkit" of functions the agent can use to interact with the file system within a sandboxed project directory.
 
 ---
